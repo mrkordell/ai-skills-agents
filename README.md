@@ -4,16 +4,18 @@ Custom agents for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) 
 
 ## Quick Install
 
+Works on macOS, Linux, and Windows (Git Bash / MSYS2 / WSL).
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/mrkordell/ai-skills-agents/main/install.sh | bash
 ```
 
-This installs all agents to their expected config directories:
+The installer detects your platform and installs to the correct config directories:
 
-| Tool | Install Path |
-|------|-------------|
-| Claude Code | `~/.claude/agents/` |
-| OpenCode | `~/.config/opencode/agents/` |
+| Platform | Claude Code | OpenCode |
+|----------|------------|----------|
+| macOS / Linux | `~/.claude/agents/` | `~/.config/opencode/agents/` |
+| Windows (Git Bash) | `%USERPROFILE%\.claude\agents\` | `%USERPROFILE%\.config\opencode\agents\` |
 
 Restart Claude Code or OpenCode after installing to pick up the new agents.
 
