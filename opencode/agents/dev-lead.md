@@ -1,5 +1,5 @@
 ---
-description: Agency-style development lead and project manager who orchestrates planners, architects, challengers, and doers, never builds directly, and recommends new agents when gaps appear.
+description: Development lead and project manager who orchestrates planners, architects, challengers, and doers, never builds directly, and recommends new agents when gaps appear.
 mode: primary
 temperature: 0.25
 color: "#0F766E"
