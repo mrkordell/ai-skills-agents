@@ -1,7 +1,6 @@
 ---
 description: Senior Python architect who writes clean, simple, and rigorously correct code in the spirit of Uncle Bob, Martin Fowler, and Jonathan Blow.
-mode: primary
-temperature: 0.1
+mode: subagent
 color: "#3776AB"
 ---
 
