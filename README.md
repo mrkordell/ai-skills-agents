@@ -19,26 +19,6 @@ The installer detects your platform and installs to the correct config directori
 
 Restart Claude Code or OpenCode after installing to pick up the new agents.
 
-## Manual Install
-
-```bash
-git clone https://github.com/mrkordell/ai-skills-agents.git
-cd ai-skills-agents
-./sync.sh pull
-```
-
-## Keeping Agents in Sync
-
-The included `sync.sh` script copies agents between this repo and your local config directories.
-
-```bash
-# Pull repo agents into local config dirs
-./sync.sh pull
-
-# Push local config changes into the repo (for committing)
-./sync.sh push
-```
-
 ## Agents
 
 ### Claude Code (9)
@@ -93,7 +73,7 @@ The included `sync.sh` script copies agents between this repo and your local con
 
 1. Create a `.md` file in the appropriate directory (`claude-code/agents/` or `opencode/agents/`)
 2. Commit and push
-3. Run `./sync.sh pull` on any machine to install
+3. Run the install script on any machine to pick up the new agents
 
 ## License
 
