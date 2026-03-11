@@ -40,12 +40,17 @@ detect_platform() {
 # ── Resolve config home based on platform ───────────────
 
 resolve_win_home() {
-  # Get Windows USERPROFILE and convert to WSL/MSYS mount path
-  local raw
-  raw="$(cmd.exe /C "echo %USERPROFILE%" 2>/dev/null | tr -d '\r')" || raw=""
+  # Try USERPROFILE env var first (available in Git Bash and WSL)
+  local raw="${USERPROFILE:-}"
+
+  # Fallback: ask Windows directly, strip the banner noise
+  if [[ -z "$raw" ]]; then
+    raw="$(cmd.exe /C "echo %USERPROFILE%" 2>/dev/null | grep -oP '[A-Za-z]:\\.*' | tr -d '\r')" || raw=""
+  fi
+
   if [[ -n "$raw" ]]; then
     # Convert C:\Users\tony -> /mnt/c/Users/tony (WSL) or /c/Users/tony (Git Bash)
-    echo "$(wslpath -u "$raw" 2>/dev/null || cygpath -u "$raw" 2>/dev/null || echo "$raw")"
+    wslpath -u "$raw" 2>/dev/null || cygpath -u "$raw" 2>/dev/null || echo "$raw"
   fi
 }
 
