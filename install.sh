@@ -23,31 +23,55 @@ BRANCH="main"
 detect_platform() {
   raw_os=$(uname -s)
   case "$raw_os" in
-    Darwin*)             platform="macos"   ;;
-    Linux*)              platform="linux"   ;;
+    Darwin*)              platform="macos"   ;;
+    Linux*)               platform="linux"   ;;
     MINGW*|MSYS*|CYGWIN*) platform="windows" ;;
-    *)                   platform="linux"   ;;
+    *)                    platform="linux"   ;;
   esac
+
+  # Detect WSL (reports as Linux but has access to Windows filesystem)
+  is_wsl=false
+  if [[ "$platform" == "linux" ]] && grep -qi microsoft /proc/version 2>/dev/null; then
+    is_wsl=true
+    platform="wsl"
+  fi
 }
 
 # ── Resolve config home based on platform ───────────────
 
+resolve_win_home() {
+  # Get Windows USERPROFILE and convert to WSL/MSYS mount path
+  local raw
+  raw="$(cmd.exe /C "echo %USERPROFILE%" 2>/dev/null | tr -d '\r')" || raw=""
+  if [[ -n "$raw" ]]; then
+    # Convert C:\Users\tony -> /mnt/c/Users/tony (WSL) or /c/Users/tony (Git Bash)
+    echo "$(wslpath -u "$raw" 2>/dev/null || cygpath -u "$raw" 2>/dev/null || echo "$raw")"
+  fi
+}
+
 resolve_paths() {
+  home_dir="$HOME"
+  win_home=""
+
   if [[ "$platform" == "windows" ]]; then
-    # Running inside Git Bash / MSYS2 / Cygwin — use Windows user profile
-    win_home="$(cmd.exe /C "echo %USERPROFILE%" 2>/dev/null | tr -d '\r')" || win_home=""
+    win_home="$(resolve_win_home)"
     if [[ -n "$win_home" ]]; then
-      # Convert Windows path (C:\Users\tony) to unix-style (/c/Users/tony)
-      home_dir="$(cygpath -u "$win_home" 2>/dev/null || echo "$win_home")"
-    else
-      home_dir="$HOME"
+      home_dir="$win_home"
     fi
-  else
-    home_dir="$HOME"
+  fi
+
+  if [[ "$platform" == "wsl" ]]; then
+    win_home="$(resolve_win_home)"
   fi
 
   CLAUDE_AGENTS_DIR="$home_dir/.claude/agents"
   OPENCODE_AGENTS_DIR="$home_dir/.config/opencode/agents"
+
+  # WSL also gets Windows-side paths
+  if [[ -n "$win_home" && "$win_home" != "$home_dir" ]]; then
+    WIN_CLAUDE_AGENTS_DIR="$win_home/.claude/agents"
+    WIN_OPENCODE_AGENTS_DIR="$win_home/.config/opencode/agents"
+  fi
 }
 
 # ── Download repo ───────────────────────────────────────
@@ -106,14 +130,27 @@ main() {
 
   detect_platform
   resolve_paths
+
   echo "  Platform: $platform"
   echo "  Home:     $home_dir"
+  if [[ -n "${win_home:-}" && "$win_home" != "$home_dir" ]]; then
+    echo "  Windows:  $win_home"
+  fi
   echo ""
 
   download_repo
 
+  # Install to primary home
   install_agents "$TMPDIR/repo/claude-code/agents" "$CLAUDE_AGENTS_DIR" "Claude Code"
   install_agents "$TMPDIR/repo/opencode/agents" "$OPENCODE_AGENTS_DIR" "OpenCode"
+
+  # WSL: also install to Windows side
+  if [[ -n "${WIN_CLAUDE_AGENTS_DIR:-}" ]]; then
+    echo ""
+    echo "  Installing to Windows side..."
+    install_agents "$TMPDIR/repo/claude-code/agents" "$WIN_CLAUDE_AGENTS_DIR" "Claude Code (Windows)"
+    install_agents "$TMPDIR/repo/opencode/agents" "$WIN_OPENCODE_AGENTS_DIR" "OpenCode (Windows)"
+  fi
 
   echo ""
   echo "  Done! Restart Claude Code or OpenCode to pick up the new agents."
